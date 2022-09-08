@@ -23,9 +23,17 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         await client.connect();
-        console.log("Database Connected");
-        //   const database = client.db("sample_mflix");
-        //   const movies = database.collection("movies");
+        //console.log("Database Connected");
+        const serviceCollection = client
+            .db("doctors_portal")
+            .collection("services");
+
+        app.get("/service", async (req, res) => {
+            const query = {};
+            const cursor = serviceCollection.find(query);
+            const services = await cursor.toArray();
+            res.send(services);
+        });
         //   // query for movies that have a runtime less than 15 minutes
         //   const query = { runtime: { $lt: 15 } };
         //   const options = {
@@ -42,7 +50,7 @@ async function run() {
         //   // replace console.dir with your callback to access individual elements
         //   await cursor.forEach(console.dir);
     } finally {
-        await client.close();
+        //await client.close();
     }
 }
 run().catch(console.dir);
