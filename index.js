@@ -27,6 +27,9 @@ async function run() {
         const serviceCollection = client
             .db("doctors_portal")
             .collection("services");
+        const bookingCollection = client
+            .db("doctors_portal")
+            .collection("bookings");
 
         app.get("/service", async (req, res) => {
             const query = {};
@@ -34,21 +37,12 @@ async function run() {
             const services = await cursor.toArray();
             res.send(services);
         });
-        //   // query for movies that have a runtime less than 15 minutes
-        //   const query = { runtime: { $lt: 15 } };
-        //   const options = {
-        //     // sort returned documents in ascending order by title (A->Z)
-        //     sort: { title: 1 },
-        //     // Include only the `title` and `imdb` fields in each returned document
-        //     projection: { _id: 0, title: 1, imdb: 1 },
-        //   };
-        //   const cursor = movies.find(query, options);
-        //   // print a message if no documents were found
-        //   if ((await cursor.count()) === 0) {
-        //     console.log("No documents found!");
-        //   }
-        //   // replace console.dir with your callback to access individual elements
-        //   await cursor.forEach(console.dir);
+
+        app.post("/booking", async (req, res) => {
+            const booking = req.body;
+            const result = await bookingCollection.insertOne(booking);
+            res.send(result);
+        });
     } finally {
         //await client.close();
     }
