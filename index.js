@@ -21,6 +21,16 @@ const client = new MongoClient(uri, {
     serverApi: ServerApiVersion.v1,
 });
 
+const verifyAdmin = async (req, res, next) => {
+    const requester = req.decoded.email;
+    const requesterAccount = await userCollection.findOne({ email: requester });
+    if (requesterAccount.role === "admin") {
+        next();
+    } else {
+        res.status(403).send({ message: "forbidden" });
+    }
+};
+
 function verifyJWT(req, res, next) {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
@@ -97,13 +107,12 @@ async function run() {
             res.send({ admin: isAdmin });
         });
 
-        app.put("/user/admin/:email", verifyJWT, async (req, res) => {
-            const email = req.params.email;
-            const requester = req.decoded.email;
-            const requesterAccount = await userCollection.findOne({
-                email: requester,
-            });
-            if (requesterAccount.role === "admin") {
+        app.put(
+            "/user/admin/:email",
+            verifyJWT,
+            verifyAdmin,
+            async (req, res) => {
+                const email = req.params.email;
                 const filter = { email: email };
                 const updateDoc = {
                     $set: { role: "admin" },
@@ -113,10 +122,8 @@ async function run() {
                     updateDoc
                 );
                 res.send(result);
-            } else {
-                res.status(403).send({ message: "forbidden" });
             }
-        });
+        );
 
         app.put("/user/:email", async (req, res) => {
             const email = req.params.email;
@@ -168,7 +175,7 @@ async function run() {
             res.send(services);
         });
 
-        app.post("/doctor", async (req, res) => {
+        app.post("/doctor", verifyJWT, verifyAdmin, async (req, res) => {
             const doctor = req.body;
             const result = await doctorCollection.insertOne(doctor);
             res.send(result);
