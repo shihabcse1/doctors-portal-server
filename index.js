@@ -21,16 +21,6 @@ const client = new MongoClient(uri, {
     serverApi: ServerApiVersion.v1,
 });
 
-const verifyAdmin = async (req, res, next) => {
-    const requester = req.decoded.email;
-    const requesterAccount = await userCollection.findOne({ email: requester });
-    if (requesterAccount.role === "admin") {
-        next();
-    } else {
-        res.status(403).send({ message: "forbidden" });
-    }
-};
-
 function verifyJWT(req, res, next) {
     const authHeader = req.headers.authorization;
     if (!authHeader) {
@@ -60,6 +50,18 @@ async function run() {
         const doctorCollection = client
             .db("doctors_portal")
             .collection("doctors");
+
+        const verifyAdmin = async (req, res, next) => {
+            const requester = req.decoded.email;
+            const requesterAccount = await userCollection.findOne({
+                email: requester,
+            });
+            if (requesterAccount.role === "admin") {
+                next();
+            } else {
+                res.status(403).send({ message: "forbidden" });
+            }
+        };
 
         app.get("/service", async (req, res) => {
             const query = {};
@@ -122,6 +124,7 @@ async function run() {
                     updateDoc
                 );
                 res.send(result);
+                console.log(result);
             }
         );
 
